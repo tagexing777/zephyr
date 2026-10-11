@@ -577,7 +577,8 @@ static int sys_clock_driver_init(void)
 
 	NVIC_SetPriority(SysTick_IRQn, SYSTICK_IRQ_PRIO);
 	min_delay = systick_min_delay();
-	last_load = TIMER_CORE_CYC_PER_TICK;
+	/* The generic timer core caches runtime cycles per tick only in timer_core_init(). */
+	last_load = TIMER_CORE_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PER_SEC;
 	overflow_cyc = 0U;
 	SysTick->LOAD = last_load - 1;
 	SysTick->VAL = 0; /* resets timer to last_load */
