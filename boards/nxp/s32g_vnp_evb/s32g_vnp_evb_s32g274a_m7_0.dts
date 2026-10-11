@@ -1,0 +1,49 @@
+/*
+ * Copyright The Zephyr Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <arm/nxp/s32/nxp_s32g274a_m7.dtsi>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include "s32g_vnp_evb_s32g274a-pinctrl.dtsi"
+
+/ {
+	model = "NXP S32G-VNP-EVB S32G274A Cortex-M7_0";
+	compatible = "nxp,s32g-vnp-evb";
+
+	aliases {
+		led0 = &user_led;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		user_led: led-0 {
+			/* Processor board D15: GPIO24/PB8, cathode driven by GPIO. */
+			gpios = <&gpiob 8 GPIO_ACTIVE_LOW>;
+			label = "D15";
+		};
+	};
+
+	chosen {
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,sram = &sram0;
+	};
+};
+
+&gpiob {
+	status = "okay";
+};
+
+&uart0 {
+	/* LIN_BAUD_CLK selects the 40 MHz FXOSC in the debug boot environment. */
+	clock-frequency = <40000000>;
+	current-speed = <115200>;
+	pinctrl-0 = <&uart0_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};

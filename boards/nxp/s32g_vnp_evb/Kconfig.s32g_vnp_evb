@@ -1,0 +1,6 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_S32G_VNP_EVB
+	select SOC_S32G274A_M7_0 if BOARD_S32G_VNP_EVB_S32G274A_M7_0
+	select SOC_PART_NUMBER_S32G274A

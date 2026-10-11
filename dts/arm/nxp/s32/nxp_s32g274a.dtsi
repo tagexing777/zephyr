@@ -1,0 +1,55 @@
+/*
+ * Copyright The Zephyr Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <mem.h>
+
+/ {
+	soc {
+		sram0: memory@34000000 {
+			compatible = "mmio-sram";
+			reg = <0x34000000 DT_SIZE_M(2)>;
+		};
+
+		sram1: memory@34200000 {
+			compatible = "mmio-sram";
+			reg = <0x34200000 DT_SIZE_M(2)>;
+		};
+
+		sram2: memory@34400000 {
+			compatible = "mmio-sram";
+			reg = <0x34400000 DT_SIZE_M(2)>;
+		};
+
+		shared_sram: memory@34600000 {
+			compatible = "mmio-sram";
+			reg = <0x34600000 DT_SIZE_M(2)>;
+		};
+
+		siul2_0: pinctrl@4009c000 {
+			compatible = "nxp,s32g-siul2-pinctrl";
+			reg = <0x4009c000 0x10000>;
+			status = "okay";
+		};
+
+		gpiob: gpio@4009d700 {
+			compatible = "nxp,siul2-gpio";
+			reg = <0x4009d700 0x2>, <0x4009c280 0x40>;
+			reg-names = "pgpdo", "mscr";
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+			status = "disabled";
+		};
+
+		uart0: serial@401c8000 {
+			compatible = "nxp,s32g-linflexd";
+			reg = <0x401c8000 0x1000>;
+			interrupts = <82 0>;
+			clock-frequency = <24000000>;
+			status = "disabled";
+		};
+	};
+};

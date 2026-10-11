@@ -1,0 +1,126 @@
+; Copyright The Zephyr Project Contributors
+; SPDX-License-Identifier: Apache-2.0
+
+; S32G-VNP-EVB S32G274A M7_0 SRAM download, using installed TRACE32 helpers.
+; Initializes both SRAM banks and disables SWT0..7. No Flash programming.
+; Requires a master debugger and a 40 MHz FXOSC-selected LIN baud-rate clock.
+; Optional first argument: absolute path to an M7_0 SRAM ELF with a main symbol.
+
+LOCAL &zephyr_elf &connect_script &watchdog_script
+LOCAL &vector_base &initial_sp &reset_vector &reset_pc
+ENTRY &zephyr_elf
+
+IF "&zephyr_elf"==""
+(
+    &zephyr_elf="~~~~/../../../../build/s32g_vnp_evb_periodic_tasks/zephyr/zephyr.elf"
+)
+&connect_script="~~/demo/arm/hardware/s32g2/scripts/s32g2_connect_m7_0.cmm"
+&watchdog_script="~~/demo/arm/hardware/s32g2/scripts/s32g2_disable_watchdog.cmm"
+&vector_base=0x34000000
+
+IF !OS.FILE.EXIST("&zephyr_elf")
+(
+    PRINT %ERROR "ELF not found: &zephyr_elf"
+    ENDDO
+)
+IF !OS.FILE.EXIST("&connect_script")
+(
+    PRINT %ERROR "Official connection script not found: &connect_script"
+    PRINT %ERROR "Check SYS in the TRACE32 configuration file."
+    ENDDO
+)
+IF !OS.FILE.EXIST("&watchdog_script")
+(
+    PRINT %ERROR "Official watchdog script not found: &watchdog_script"
+    ENDDO
+)
+IF SYStem.CONFIG.Slave()
+(
+    PRINT %ERROR "Run this script in the master TRACE32 debugger."
+    ENDDO
+)
+
+RESet
+SYStem.CPU S32G274A-M7
+CORE.ASSIGN 1.
+SYStem.CONFIG.DEBUGPORTTYPE JTAG
+SYStem.Option DUALPORT ON
+SYStem.MemAccess DAP
+SYStem.JtagClock 1MHz
+Trace.DISable
+ETM.OFF
+ITM.OFF
+
+; Fall back to the installed helper if the core has not booted.
+ON ERROR GOSUB
+(
+    ON ERROR DEFault
+    PRINT "Direct connection failed; waking M7_0 with the official helper."
+    DO "&connect_script"
+    RETURN
+)
+SYStem.Up
+ON ERROR DEFault
+Break
+
+DO "&watchdog_script"
+
+; Also initialize SRAM when SYStem.Up succeeded without the fallback.
+Data.Set EAXI:0x4019C000 %Long 0x00000001
+Data.Set EAXI:0x401A0000 %Long 0x00000001
+WAIT 10ms
+
+IF ((Data.Long(D:0x40030504)&0x1F000000)!=0x02000000)
+(
+    PRINT %ERROR "LIN_BAUD_CLK does not select FXOSC; this image requires 40 MHz."
+    PRINT %ERROR "No clock-tree change was made. Check the boot clock configuration."
+    ENDDO
+)
+
+; Clear the Cortex-M thread state used by a previously loaded image.
+Data.Set D:0xE000E010 %Long 0
+Data.Set D:0xE000ED04 %Long 0x0A000000
+Register.Set CONTROL 0
+Register.Set PRIMASK 0
+Register.Set BASEPRI 0
+Register.Set FAULTMASK 0
+Register.Set XPSR 0x01000000
+
+Data.LOAD.Elf "&zephyr_elf"
+&initial_sp=Data.Long(D:&vector_base)
+&reset_vector=Data.Long(D:&vector_base+0x4)
+&reset_pc=(&reset_vector&0xFFFFFFFE)
+
+IF ((&initial_sp<=0x34000000)||(&initial_sp>0x34200000)||((&initial_sp&0x7)!=0))
+(
+    PRINT %ERROR "Invalid initial stack pointer for the M7_0 2 MiB SRAM region."
+    ENDDO
+)
+IF (((&reset_vector&0x1)==0)||(&reset_pc<0x34000000)||(&reset_pc>=0x34200000))
+(
+    PRINT %ERROR "Invalid Thumb reset vector for the M7_0 SRAM image."
+    ENDDO
+)
+
+Register.Set MSP &initial_sp
+Data.Set D:0xE000ED08 %Long &vector_base
+Register.Set PC &reset_pc
+Break.Set main /Onchip
+Go
+WAIT !STATE.RUN() 5s
+IF STATE.RUN()
+(
+    Break
+    PRINT %ERROR "Startup did not stop within 5 seconds. Check PC and fault registers."
+    ENDDO
+)
+IF Register(PC)!=ADDRESS.OFFSET(main)
+(
+    PRINT %ERROR "Startup stopped before main. Check PC and fault registers."
+    ENDDO
+)
+
+Register.view
+List.auto
+PRINT "Zephyr loaded and stopped at main. Open COM3 at 115200 8N1, then execute Go."
+ENDDO

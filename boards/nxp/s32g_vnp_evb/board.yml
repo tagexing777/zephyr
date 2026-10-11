@@ -1,0 +1,9 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+board:
+  name: s32g_vnp_evb
+  full_name: S32G-VNP-EVB
+  vendor: nxp
+  socs:
+    - name: s32g274a

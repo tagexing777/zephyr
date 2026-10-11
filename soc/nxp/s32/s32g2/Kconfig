@@ -1,0 +1,14 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+# NXP S32G2 vehicle network processors
+
+config SOC_SERIES_S32G2
+	select ARM
+	select CPU_CORTEX_M7
+	select CPU_HAS_ARM_MPU
+	select CPU_HAS_DCACHE
+	select CPU_HAS_FPU
+	select CPU_HAS_ICACHE
+	select HAS_CMSIS_CORE
+	select SOC_EARLY_INIT_HOOK

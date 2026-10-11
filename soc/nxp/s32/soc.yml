@@ -20,6 +20,13 @@ family:
       cpuclusters:
       - name: m7
       - name: r52
+  - name: s32g2
+    socs:
+    - name: s32g274a
+      cpuclusters:
+      - name: m7_0
+      - name: m7_1
+      - name: m7_2
   - name: s32ze
     socs:
     - name: s32z270

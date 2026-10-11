@@ -1,0 +1,21 @@
+/*
+ * Copyright The Zephyr Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/pinctrl/nxp-s32g274a-525bga-pinctrl.h>
+
+&siul2_0 {
+	uart0_default: uart0_default {
+		group1 {
+			pinmux = <PC9_LINFLEXD0_TX>;
+			output-enable;
+		};
+
+		group2 {
+			pinmux = <PC10_LINFLEXD0_RX>;
+			input-enable;
+		};
+	};
+};

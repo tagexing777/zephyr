@@ -1,0 +1,31 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: NXP S32G SIUL2 pin controller
+
+compatible: "nxp,s32g-siul2-pinctrl"
+
+include: base.yaml
+
+child-binding:
+  child-binding:
+    include:
+      - name: pincfg-node.yaml
+        property-allowlist:
+          - bias-disable
+          - bias-pull-down
+          - bias-pull-up
+          - input-enable
+          - output-enable
+
+    properties:
+      pinmux:
+        required: true
+        type: array
+
+      slew-rate:
+        type: string
+        enum:
+          - "fastest"
+          - "slowest"
+        default: "fastest"

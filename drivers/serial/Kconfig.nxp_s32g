@@ -1,0 +1,12 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config UART_NXP_S32G_LINFLEXD
+	bool "NXP S32G LINFlexD polling UART driver"
+	default y
+	depends on DT_HAS_NXP_S32G_LINFLEXD_ENABLED
+	select PINCTRL
+	select SERIAL_HAS_DRIVER
+	help
+	  Enable the polling-only LINFlexD UART driver used during initial
+	  NXP S32G bring-up. Interrupt-driven operation is not supported.

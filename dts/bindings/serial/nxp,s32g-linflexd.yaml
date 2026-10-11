@@ -1,0 +1,26 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: NXP S32G LINFlexD UART
+
+compatible: "nxp,s32g-linflexd"
+
+include: [uart-controller.yaml, pinctrl-device.yaml]
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true
+
+  clock-frequency:
+    type: int
+    required: true
+    description: LINFlexD functional clock frequency in Hz

@@ -1,0 +1,14 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_SERIES_S32G2
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default $(dt_node_int_prop_int,/cpus/cpu@0,clock-frequency)
+
+configdefault FPU
+	default y
+
+rsource "Kconfig.defconfig.*"
+
+endif # SOC_SERIES_S32G2

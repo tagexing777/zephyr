@@ -1,0 +1,26 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_SERIES_S32G2
+	bool
+	select SOC_FAMILY_NXP_S32
+
+config SOC_SERIES
+	default "s32g2" if SOC_SERIES_S32G2
+
+config SOC_S32G274A
+	bool
+	select SOC_SERIES_S32G2
+
+config SOC_S32G274A_M7_0
+	bool
+	select SOC_S32G274A
+
+config SOC
+	default "s32g274a" if SOC_S32G274A
+
+config SOC_PART_NUMBER_S32G274A
+	bool
+
+config SOC_PART_NUMBER
+	default "S32G274A" if SOC_PART_NUMBER_S32G274A
