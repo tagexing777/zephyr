@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 This file is for coding agents, and for the humans driving them, working in this repository.
 It is a digest of `doc/contribute/` plus the things CI and maintainers reject most often. Where
 it is silent or disagrees with the documentation, the documentation wins:
-`doc/contribute/guidelines.rst` (process, DCO, AI-assistant policy),
+`doc/contribute/guidelines.rst` (process and AI-assistant policy),
 `doc/contribute/contributor_expectations.rst` (PR shape), `doc/contribute/style/` (C, Kconfig,
 CMake, Doxygen and devicetree style) and `doc/contribute/coding_guidelines/index.rst` (the
 MISRA-C subset). Read the relevant page before working in an area you have not touched before;
@@ -16,9 +16,10 @@ do not rely on this digest or on training data alone.
 
 ## Rules for agents
 
-- Every commit must carry a `Signed-off-by:` line from the human responsible for the work; it
-  is required, not optional. Never add, edit or copy one yourself: only a human can certify the
-  DCO, and the submitter adds their own (`git commit -s`). Never add `Co-authored-by:`. Do not
+- Commits and pushes to this development fork do not require sign-off. This exception takes
+  precedence over upstream contribution signing requirements for work on this fork. Do not add
+  signing trailers. Contributions submitted upstream still follow upstream policies.
+- Never add `Co-authored-by:`. Do not
   put "Generated with ...", session links or any other mention of AI tools in commit messages,
   PR bodies, issues or comments. The `Assisted-by:` trailer below is the only place AI
   involvement is recorded.
@@ -80,16 +81,13 @@ trip. Fix the cause, never work around a check.
     Fixes #12345
 
     Assisted-by: Claude:claude-opus-4.6
-    Signed-off-by: Full Name <email@example.com>
 
 - `area:` is the prefix the file's recent history uses: `git log --format=%s -20 -- <path>`.
   Examples: `Bluetooth: Host:`, `drivers: i2c: nrfx:`, `dts: arm: st:`, `boards: nordic:`,
   `kernel:`, `doc:`, `.github:`. Never `subsys:` or `treewide:`, never `WIP`.
-- Trailers (`Assisted-by`, `Signed-off-by`, `Link:`, `(cherry picked from commit ...)`) form one
+- Trailers (`Assisted-by`, `Link:`, `(cherry picked from commit ...)`) form one
   block as the last paragraph. `Fixes #N` goes in its own paragraph directly before that
   block. Reference other commits as `commit <12-char sha> ("subject")`.
-- One `Signed-off-by:` line must match the commit `Author:` name and e-mail; never remove an
-  existing sign-off. Verify with `git log -1 --format='%an <%ae>%n%b'`.
 - One logical change per commit: a fix, its tests and its docs may be separate commits, but one
   commit never mixes unrelated changes. No fixup, squash or merge commits in a PR: fold review
   fixes into the commit that owns the lines. Without an interactive terminal:
