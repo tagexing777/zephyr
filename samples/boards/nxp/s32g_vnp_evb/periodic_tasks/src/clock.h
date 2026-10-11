@@ -11,6 +11,23 @@
 /* Startup result for main() and debugger inspection. Zero means unsupported. */
 extern uint32_t sample_core_clock_hz;
 extern uint32_t sample_clock_source;
+extern int32_t sample_clock_error;
+
+/**
+ * @brief Configure the standalone M7 clock from the stable board crystal before SysTick.
+ *
+ * Requires exclusive ownership of CORE_PLL and XBAR clocks. Other cores must
+ * remain disabled; state checks do not establish an AMP resource reservation.
+ * After a failure during reconfiguration, XBAR may remain on FIRC. Do not start
+ * application tasks when this function fails.
+ *
+ * @retval 0 Crystal-based 400 MHz clock configured or already selected.
+ * @retval -ENODEV FXOSC is not stable.
+ * @retval -ENOTSUP Boot firmware has not initialized the CORE_DFS master.
+ * @retval -EBUSY Another core or clock consumer is enabled.
+ * @retval -ETIMEDOUT Clock switch, PLL lock, or DFS status poll exceeded its bound.
+ */
+int32_t sample_clock_configure_fxosc(void);
 
 static inline uint64_t sample_pll_hz(uint32_t ref_hz, uint32_t pll_div,
 				    uint32_t pll_frac, uint32_t pll_status)

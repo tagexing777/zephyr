@@ -198,6 +198,10 @@ int main(void)
 	};
 	int err;
 
+	if (sample_clock_error != 0) {
+		printk("M7 crystal clock initialization failed: %" PRId32 "\n", sample_clock_error);
+		return sample_clock_error;
+	}
 	if (sample_core_clock_hz == 0U) {
 		printk("Unsupported M7 clock tree, MUX0 source=%" PRIu32 "\n", sample_clock_source);
 		return -ENOTSUP;

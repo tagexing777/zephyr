@@ -18,6 +18,7 @@
 
 uint32_t sample_core_clock_hz;
 uint32_t sample_clock_source;
+int32_t sample_clock_error;
 
 /* Kernel runtime frequency storage, initialized before the timer driver. */
 extern unsigned int z_clock_hw_cycles_per_sec;
@@ -36,7 +37,12 @@ static uint64_t core_pll_hz(void)
 static int sample_clock_init(void)
 {
 	uint64_t xbar_2x_hz = 0U;
-	uint32_t source = (sys_read32(MC_CGM0_MUX0_CSS) >> 24U) & 0x3fU;
+	uint32_t source;
+
+	if (IS_ENABLED(CONFIG_SAMPLE_S32G_CORE_PLL_FXOSC)) {
+		sample_clock_error = sample_clock_configure_fxosc();
+	}
+	source = (sys_read32(MC_CGM0_MUX0_CSS) >> 24U) & 0x3fU;
 
 	sample_clock_source = source;
 	if (source == 0U) {
@@ -65,7 +71,7 @@ static int sample_clock_init(void)
 	}
 
 	sample_core_clock_hz = (uint32_t)xbar_2x_hz;
-	/* Publish before SysTick initialization; do not change shared SoC clocks. */
+	/* Publish the resulting frequency before SysTick initialization. */
 	z_clock_hw_cycles_per_sec = sample_core_clock_hz;
 	return 0;
 }

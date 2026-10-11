@@ -70,8 +70,27 @@ SysTick initialization, it reads MC_CGM_0 MUX_0 and the selected CORE_PLL/DFS
 divider registers, then publishes the nominal M7 clock to the kernel. It follows
 the NXP RTD ``Clock_Ip_Frequency.c`` equations: M7 uses XBAR_2X_CLK divided by two.
 Supported sources are FIRC, FXOSC, CORE_PLL PHI0/1, and CORE_PLL DFS1 through DFS6.
-The sample does not reprogram shared clock, reset, or power-management registers.
-Unsupported or unlocked configurations print an error and do not start tasks.
+With ``CONFIG_SAMPLE_S32G_CORE_PLL_FXOSC=y`` (the sample default), startup
+switches XBAR/M7 temporarily to FIRC, resets the enabled CORE_DFS output,
+reconfigures CORE_PLL from the stable 40 MHz crystal, waits for PLL/DFS lock,
+and selects CORE_DFS1 again. The PLL uses RDIV=2, MFI=80, and no fractional or
+spread-spectrum modulation: VCO=1600 MHz, DFS1=800 MHz, M7=400 MHz.
+This is crystal-referenced PLL operation, not direct 40 MHz M7 operation.
+
+The configuration requires a boot-initialized CORE_DFS master and exclusive
+ownership of CORE_PLL and XBAR clocks. An asserted DFS master reset is rejected;
+this sample does not perform the boot owner's paired CORE/PERIPH DFS initialization.
+Startup rejects enabled A53/other M7 cores, other enabled CORE_PLL outputs,
+or other selected CORE_PLL consumers. These state checks cannot establish AMP
+ownership; other firmware must not start a core or change these clocks concurrently.
+No reset or power-management registers are written. Peripheral PLL, GMAC clock
+muxes, and the UART clock selection are not modified by this configuration.
+Polls are bounded iteration counts because SysTick does not yet exist.
+On an error the application does not start tasks; XBAR may remain on FIRC.
+
+Disable ``CONFIG_SAMPLE_S32G_CORE_PLL_FXOSC`` when boot firmware owns the clock
+tree. Startup then only decodes the existing clock without reprogramming it.
+Unsupported, unlocked, or failed configurations print an error and do not start tasks.
 The UART still requires MUX_8 to select the board's 40 MHz FXOSC.
 
 FIRC is treated as nominally 48 MHz; its physical tolerance and PLL spread
@@ -202,8 +221,8 @@ consecutive counters and target uptime increments of 9 through 11 ms; host arriv
 spacing is reported separately. Run these while checking the original UART task
 lines, counted events, and LED GPIO. The console harness checks startup only.
 UDP remains best-effort, and unplugged cables or unavailable peers can cause loss.
-D-cache is disabled for GMAC bring-up. This integration does not switch the
-M7 CORE_PLL reference or change the existing UART clock selection.
+D-cache is disabled for GMAC bring-up. The M7 crystal configuration runs before
+these application threads and does not change the existing UART clock selection.
 
 Host Logic Tests
 ================

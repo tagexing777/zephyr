@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "S32G periodic application"
+
+source "Kconfig.zephyr"
+
+config SAMPLE_S32G_CORE_PLL_FXOSC
+	bool "Initialize CORE_PLL from the board crystal"
+	depends on SOC_S32G274A_M7_0
+	help
+	  Configure the shared CORE_PLL and DFS1 before SysTick starts, using
+	  the existing stable 40 MHz FXOSC to generate a nominal 400 MHz M7
+	  clock. Requires exclusive ownership of CORE_PLL and XBAR clocks,
+	  stopped A53 and other M7 cores, and no other enabled CORE_PLL output.
+	  Disable this option when boot firmware owns the shared clock tree.

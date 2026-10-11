@@ -11,6 +11,8 @@
 
 static void test_clock(void)
 {
+	assert(sample_pll_hz(40000000U, 0x2050U, 0U, 4U) == 1600000000U);
+	assert(sample_dfs_hz(1600000000U, 0x100U, 1U, 0U) / 2U == 400000000U);
 	assert(sample_pll_hz(40000000U, 0x1028U, 0U, 4U) == 1600000000U);
 	assert(sample_pll_hz(48000000U, 0x1032U, 0U, 4U) == 2400000000U);
 	assert(sample_pll_hz(48000000U, 0x2028U, 0U, 4U) == 960000000U);
