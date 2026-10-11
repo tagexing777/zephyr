@@ -5,10 +5,12 @@
 ; Initializes both SRAM banks and disables SWT0..7. No Flash programming.
 ; Requires a master debugger and a 40 MHz FXOSC-selected LIN baud-rate clock.
 ; Optional first argument: absolute path to an M7_0 SRAM ELF with a main symbol.
+; Optional second argument: WARM, using an already-connected M7_0 debugger.
+; WARM stops the exclusively owned GMAC0 and reloads only the M7_0 image.
 
-LOCAL &zephyr_elf &connect_script &watchdog_script
+LOCAL &zephyr_elf &connect_script &watchdog_script &load_mode
 LOCAL &vector_base &initial_sp &reset_vector &reset_pc
-ENTRY &zephyr_elf
+PARAMETERS &zephyr_elf &load_mode
 
 IF "&zephyr_elf"==""
 (
@@ -38,6 +40,29 @@ IF SYStem.CONFIG.Slave()
 (
     PRINT %ERROR "Run this script in the master TRACE32 debugger."
     ENDDO
+)
+
+IF (("&load_mode"!="")&&("&load_mode"!="WARM"))
+(
+    PRINT %ERROR "Second argument must be WARM or omitted."
+    ENDDO
+)
+IF "&load_mode"=="WARM"
+(
+    IF !CPUIS("S32G274A-M7-0")&&!CPUIS("S32G274A-M7")
+    (
+        PRINT %ERROR "WARM requires an already-connected S32G274A M7_0 debugger."
+        ENDDO
+    )
+    ; Requires M7_0 and GMAC0 ownership; no target reset or SRAM initialization.
+    Break
+    Data.Set D:0x4033D104 %Long 0
+    Data.Set D:0x4033D108 %Long 0
+    Data.Set D:0x4033C000 %Long 0
+    Data.Set D:0x4033D134 %Long 0
+    Data.Set D:0xE000E184 %Long 0x0E000000
+    Data.Set D:0xE000E284 %Long 0x0E000000
+    GOTO load_image
 )
 
 RESet
@@ -70,6 +95,7 @@ Data.Set EAXI:0x4019C000 %Long 0x00000001
 Data.Set EAXI:0x401A0000 %Long 0x00000001
 WAIT 10ms
 
+load_image:
 IF ((Data.Long(D:0x40030504)&0x1F000000)!=0x02000000)
 (
     PRINT %ERROR "LIN_BAUD_CLK does not select FXOSC; this image requires 40 MHz."
@@ -120,6 +146,8 @@ IF Register(PC)!=ADDRESS.OFFSET(main)
     ENDDO
 )
 
+; Remove the startup breakpoint so it cannot survive the next ELF relocation.
+Break.Delete main
 Register.view
 List.auto
 PRINT "Zephyr loaded and stopped at main. Open COM3 at 115200 8N1, then execute Go."
