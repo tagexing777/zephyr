@@ -7,6 +7,11 @@ S32G M7 Upper Board Ethernet
 Overview
 ********
 
+This is a network-only reference. Continue board application development in
+``../periodic_tasks``, which combines the original tasks, counted events, LED,
+UART, UDP echo, and UDP logs in one ELF. Shared UDP logging sources, the overlay,
+and PC verification tools live in that application.
+
 This sample provides IPv4 ICMP replies and a UDP echo server on port 4242 using
 GMAC0 on S32G274A M7_0. It targets the original S32G-VNP-EVB, not EVB3.
 Connect the cable to **J108 on the upper S32G-PROCEVB-S processor board**.
@@ -81,7 +86,7 @@ Wait for the UART message ``Link speed 1000 Mb, full duplex``.
 .. code-block:: console
 
    ping 192.168.10.2
-   python samples/boards/nxp/s32g_vnp_evb/ethernet/verify_echo.py
+   python samples/boards/nxp/s32g_vnp_evb/periodic_tasks/verify_echo.py
 
 The verifier checks 600 datagrams with payload sizes 1, 60, 128, 512, 1024,
 and 1472 bytes, including the full returned payload and peer address.
@@ -100,7 +105,7 @@ Each log contains the task name, activation count, target uptime in milliseconds
 and missed timer periods. Change ``LOG_HOST`` and ``LOG_PORT`` in ``src/main.c``
 to select another destination on the test network.
 
-The application-level interface is declared in ``src/udp_log.h``:
+The application-level interface is declared in ``../periodic_tasks/src/udp_log.h``:
 
 .. code-block:: c
 
@@ -139,8 +144,8 @@ on this dedicated adapter if necessary:
 
 .. code-block:: console
 
-   python samples/boards/nxp/s32g_vnp_evb/ethernet/receive_log.py
-   python samples/boards/nxp/s32g_vnp_evb/ethernet/receive_log.py --count 1000 --quiet --verify
+   python samples/boards/nxp/s32g_vnp_evb/periodic_tasks/receive_log.py
+   python samples/boards/nxp/s32g_vnp_evb/periodic_tasks/receive_log.py --count 1000 --quiet --verify
 
 The first command displays logs until Ctrl+C. The second verifies 1000 consecutive
 task messages, target uptime steps of 9 through 11 ms, and no newly missed timer

@@ -9,4 +9,6 @@ project(s32g_periodic_tasks)
 target_sources(app PRIVATE
   src/main.c
   src/clock.c
+  src/network.c
+  src/udp_log.c
 )

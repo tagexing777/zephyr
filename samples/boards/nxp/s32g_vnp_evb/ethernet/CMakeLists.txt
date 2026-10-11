@@ -7,6 +7,10 @@ project(s32g_upper_ethernet)
 
 target_sources(app PRIVATE
   src/main.c
-  src/udp_log.c
+  ../periodic_tasks/src/udp_log.c
   ../periodic_tasks/src/clock.c
+)
+
+target_include_directories(app PRIVATE
+  ../periodic_tasks/src
 )

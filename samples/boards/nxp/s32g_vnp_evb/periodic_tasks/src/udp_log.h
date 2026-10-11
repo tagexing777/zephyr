@@ -21,6 +21,8 @@ struct udp_log_stats {
 	uint32_t sent;    /**< Datagrams accepted by the local network stack. */
 	uint32_t dropped; /**< Messages rejected by size, queue, or transport limits. */
 	uint32_t errors;  /**< Transport send failures. */
+	uint32_t max_send_ms; /**< Longest socket send duration in target milliseconds. */
+	int32_t last_send_error; /**< Last negative transport errno, or zero before an error. */
 };
 
 /**

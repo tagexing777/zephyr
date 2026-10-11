@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 sample:
-  name: S32G M7 periodic tasks and counted events
+  name: S32G M7 periodic tasks, counted events and UDP networking
 tests:
   sample.boards.nxp.s32g.periodic_tasks:
     platform_allow:
@@ -12,6 +12,8 @@ tests:
     tags:
       - gpio
       - kernel
+      - ethernet
+      - net
     harness: console
     harness_config:
       type: multi_line
@@ -20,3 +22,5 @@ tests:
         - "Periodic tasks started"
         - "task_10ms"
         - "task_100ms"
+        - "UDP log task started: 10 ms"
+        - "UDP echo ready; awaiting PHY link and packets"

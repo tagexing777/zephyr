@@ -10,6 +10,7 @@
 #include <zephyr/sys/printk.h>
 
 #include "clock.h"
+#include "network.h"
 #include "periodic_logic.h"
 
 #define STACK_SIZE   1024U
@@ -234,6 +235,11 @@ int main(void)
 	irq_unlock(key);
 	for (size_t i = 0U; i < ARRAY_SIZE(threads); i++) {
 		k_thread_start(threads[i]);
+	}
+	err = sample_network_start();
+	if (err != 0) {
+		printk("Network thread startup failed: %d\n", err);
+		return err;
 	}
 	return 0;
 }

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Verify IPv4 UDP echo payloads on an isolated S32G test network."""
+"""Verify IPv4 UDP echo payloads alongside S32G periodic tasks."""
 
 import argparse
 import socket

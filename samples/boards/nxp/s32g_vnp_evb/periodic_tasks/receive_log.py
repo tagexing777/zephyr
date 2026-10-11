@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Receive S32G UDP logs and optionally verify the 10 ms sample task."""
+"""Receive S32G periodic-application UDP logs and verify the 10 ms log task."""
 
 import argparse
 import re

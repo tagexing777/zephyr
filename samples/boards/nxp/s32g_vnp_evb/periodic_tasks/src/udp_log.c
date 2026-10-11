@@ -25,6 +25,8 @@ static atomic_t queued_count;
 static atomic_t sent_count;
 static atomic_t dropped_count;
 static atomic_t error_count;
+static atomic_t max_send_ms;
+static atomic_t last_send_error;
 
 static void udp_log_sender(void *p1, void *p2, void *p3)
 {
@@ -36,16 +38,24 @@ static void udp_log_sender(void *p1, void *p2, void *p3)
 	ARG_UNUSED(p3);
 	while (true) {
 		ssize_t sent;
+		uint32_t start_ms;
+		uint32_t elapsed_ms;
 
 		ret = k_msgq_get(&udp_log_queue, &message, K_FOREVER);
 		if (ret != 0) {
 			continue;
 		}
+		start_ms = k_uptime_get_32();
 		sent = zsock_sendto(log_socket, message.text, message.length,
 				    ZSOCK_MSG_DONTWAIT,
 				    (const struct sockaddr *)&log_peer, sizeof(log_peer));
+		elapsed_ms = k_uptime_get_32() - start_ms;
+		if (elapsed_ms > (uint32_t)atomic_get(&max_send_ms)) {
+			atomic_set(&max_send_ms, (atomic_val_t)elapsed_ms);
+		}
 
 		if (sent != (ssize_t)message.length) {
+			atomic_set(&last_send_error, (sent < 0) ? -errno : -EIO);
 			atomic_inc(&error_count);
 			atomic_inc(&dropped_count);
 		} else {
@@ -143,5 +153,7 @@ int32_t udp_log_get_stats(struct udp_log_stats *stats)
 	stats->sent = (uint32_t)atomic_get(&sent_count);
 	stats->dropped = (uint32_t)atomic_get(&dropped_count);
 	stats->errors = (uint32_t)atomic_get(&error_count);
+	stats->max_send_ms = (uint32_t)atomic_get(&max_send_ms);
+	stats->last_send_error = (int32_t)atomic_get(&last_send_error);
 	return 0;
 }
