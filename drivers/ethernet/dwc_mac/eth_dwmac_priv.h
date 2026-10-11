@@ -120,6 +120,9 @@ struct dwmac_config {
 	const struct device *phy_dev;
 	const struct device *clock;
 	const clock_control_subsys_t mac_clk;
+	/* Usable FIFO capacities in bytes; zero uses the hardware feature register. */
+	uint32_t rx_fifo_size;
+	uint32_t tx_fifo_size;
 #if defined(CONFIG_PTP_CLOCK_DWC_MAC)
 	const struct device *ptp_clock;
 	const clock_control_subsys_t ptp_clk;

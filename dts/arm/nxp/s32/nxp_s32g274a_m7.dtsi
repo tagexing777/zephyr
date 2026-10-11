@@ -37,6 +37,22 @@
 
 	soc {
 		interrupt-parent = <&nvic>;
+
+		gmac0: ethernet@4033c000 {
+			compatible = "nxp,s32g-gmac", "snps,dwmac";
+			reg = <0x4033c000 0x2000>;
+			interrupts = <57 2>, <58 2>, <59 2>;
+			interrupt-names = "common", "tx", "rx";
+			snps,clk-csr = <7>;
+			status = "disabled";
+
+			gmac0_mdio: mdio {
+				compatible = "snps,dwmac-mdio";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "disabled";
+			};
+		};
 	};
 };
 

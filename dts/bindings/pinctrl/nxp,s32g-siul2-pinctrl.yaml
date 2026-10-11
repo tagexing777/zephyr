@@ -29,3 +29,10 @@ child-binding:
           - "fastest"
           - "slowest"
         default: "fastest"
+
+      nxp,slew-rate:
+        type: int
+        enum: [0, 1, 2, 3, 4, 5, 6, 7]
+        description: |
+          Raw MSCR SRE encoding for voltage-dependent pad slew rates.
+          Overrides slew-rate when present. RGMII pads at 3.3 V use encoding 5.

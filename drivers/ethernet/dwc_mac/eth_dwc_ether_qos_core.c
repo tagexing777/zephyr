@@ -803,6 +803,7 @@ static struct net_stats_eth *dwmac_stats(const struct device *dev, struct net_if
 
 int dwmac_probe(const struct device *dev)
 {
+	const struct dwmac_config *cfg = dev->config;
 	struct dwmac_priv *p = dev->data;
 	int ret;
 	uint32_t reg_val;
@@ -863,6 +864,12 @@ int dwmac_probe(const struct device *dev)
 	/* currently only a single queue is supported, assign full FIFO to it */
 	rx_fifo_size = BIT(7 + FIELD_GET(MAC_HW_FEATURE1_RXFIFOSIZE, p->feature1));
 	tx_fifo_size = BIT(7 + FIELD_GET(MAC_HW_FEATURE1_TXFIFOSIZE, p->feature1));
+	if (cfg->rx_fifo_size != 0U) {
+		rx_fifo_size = MIN(rx_fifo_size, cfg->rx_fifo_size);
+	}
+	if (cfg->tx_fifo_size != 0U) {
+		tx_fifo_size = MIN(tx_fifo_size, cfg->tx_fifo_size);
+	}
 	LOG_DBG("RX/TX fifo size: %u/%u bytes", rx_fifo_size, tx_fifo_size);
 
 	DWMAC_REG_WRITE(MTL_RXQn_OPERATION_MODE(0),

@@ -88,6 +88,19 @@ config ETH_NXP_DWC_ETHER_QOS
 	  This enables the Synopsys DesignWare MAC driver on NXP MCX N/MCX A/MCX E31
 	  and S32K3 series SoCs, where the IP is named EMAC.
 
+config ETH_S32G_DWC_ETHER_QOS
+	bool "NXP S32G2 DWC Ethernet QoS driver"
+	depends on SOC_SERIES_S32G2
+	depends on DT_HAS_NXP_S32G_GMAC_ENABLED
+	depends on NET_BUF_FIXED_DATA_SIZE
+	select ETH_DWC_ETHER_QOS_CORE
+	select PINCTRL
+	default y
+	help
+	  Enable GMAC0 on S32G2 Cortex-M7 with an external RGMII PHY.
+	  The application must reserve GMAC0, its pins, IRQs, DMA memory,
+	  peripheral PLL PHI5 and clock muxes 10 and 11 for this core.
+
 config ETH_STM32_DWC_ETHER_QOS
 	bool "Driver for DWC Ethernet QoS-based STM32"
 	depends on !ETH_STM32_HAL

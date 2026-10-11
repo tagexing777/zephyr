@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: NXP S32G2 GMAC in RGMII mode
+
+compatible: "nxp,s32g-gmac"
+
+include:
+  - snps,dwmac.yaml
+  - pinctrl-device.yaml
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  interrupt-names:
+    required: true
+
+  nxp,initialize-periph-pll:
+    type: boolean
+    description: |
+      Initialize the powered-down peripheral PLL from the 40 MHz FXOSC.
+      Only enable when the application owns the peripheral PLL at startup.
+      An already-running PLL is never reprogrammed. PHI5 is reserved for GMAC.

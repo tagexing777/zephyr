@@ -36,7 +36,8 @@
 		       SIUL2_MSCR_PUE(DT_PROP(group, bias_pull_up) ||                              \
 				      DT_PROP(group, bias_pull_down)) |                            \
 		       SIUL2_MSCR_PUS(DT_PROP(group, bias_pull_up)) |                              \
-		       SIUL2_MSCR_SRE(DT_ENUM_IDX(group, slew_rate))                               \
+		       SIUL2_MSCR_SRE(DT_PROP_OR(group, nxp_slew_rate,                             \
+					DT_ENUM_IDX(group, slew_rate)))                            \
 	},                                                                                         \
 	.imcr = {                                                                                  \
 		.inst = NXP_SIUL2_PINMUX_GET_IMCR_SIUL2_IDX(value),                                \
