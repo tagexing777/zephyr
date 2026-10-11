@@ -10,6 +10,7 @@
 #include <zephyr/sys/printk.h>
 
 #include "clock.h"
+#include "eeprom_read_test.h"
 #include "network.h"
 #include "periodic_logic.h"
 
@@ -205,6 +206,13 @@ int main(void)
 	if (sample_core_clock_hz == 0U) {
 		printk("Unsupported M7 clock tree, MUX0 source=%" PRIu32 "\n", sample_clock_source);
 		return -ENOTSUP;
+	}
+	/* Check reads before an optional, debugger-armed write/restore test. */
+	sample_eeprom_read_test();
+	err = sample_eeprom_write_test();
+	if (err != 0) {
+		printk("EEPROM write test failed; application tasks remain stopped: %d\n", err);
+		return err;
 	}
 	if (!gpio_is_ready_dt(&led)) {
 		printk("D15 GPIO is not ready\n");

@@ -21,6 +21,8 @@
 #define SIUL2_MSCR_SRE(v)   FIELD_PREP(SIUL2_MSCR_SRE_MASK, (v))
 #define SIUL2_MSCR_IBE_MASK BIT(19)
 #define SIUL2_MSCR_IBE(v)   FIELD_PREP(SIUL2_MSCR_IBE_MASK, (v))
+#define SIUL2_MSCR_ODE_MASK BIT(20)
+#define SIUL2_MSCR_ODE(v)   FIELD_PREP(SIUL2_MSCR_ODE_MASK, (v))
 #define SIUL2_MSCR_OBE_MASK BIT(21)
 #define SIUL2_MSCR_OBE(v)   FIELD_PREP(SIUL2_MSCR_OBE_MASK, (v))
 #define SIUL2_IMCR_SSS_MASK GENMASK(2, 0)
@@ -33,6 +35,7 @@
 		.val = SIUL2_MSCR_SSS(NXP_SIUL2_PINMUX_GET_MSCR_SSS(value)) |                      \
 		       SIUL2_MSCR_OBE(DT_PROP(group, output_enable)) |                             \
 		       SIUL2_MSCR_IBE(DT_PROP(group, input_enable)) |                              \
+		       SIUL2_MSCR_ODE(DT_PROP(group, drive_open_drain)) |                          \
 		       SIUL2_MSCR_PUE(DT_PROP(group, bias_pull_up) ||                              \
 				      DT_PROP(group, bias_pull_down)) |                            \
 		       SIUL2_MSCR_PUS(DT_PROP(group, bias_pull_up)) |                              \

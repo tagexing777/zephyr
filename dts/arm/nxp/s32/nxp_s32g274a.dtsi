@@ -44,6 +44,12 @@
 			status = "disabled";
 		};
 
+		siul2_1: pinctrl@44010000 {
+			compatible = "nxp,s32g-siul2-pinctrl";
+			reg = <0x44010000 0x10000>;
+			status = "okay";
+		};
+
 		uart0: serial@401c8000 {
 			compatible = "nxp,s32g-linflexd";
 			reg = <0x401c8000 0x1000>;

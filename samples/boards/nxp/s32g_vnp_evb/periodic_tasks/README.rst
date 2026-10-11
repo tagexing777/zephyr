@@ -224,6 +224,102 @@ UDP remains best-effort, and unplugged cables or unavailable peers can cause los
 D-cache is disabled for GMAC bring-up. The M7 crystal configuration runs before
 these application threads and does not change the existing UART clock selection.
 
+Upper-board EEPROM Read Test
+============================
+
+The application runs a bounded, polled hardware I2C2 test before starting the
+periodic application threads. Upper processor board S32G-PROCEVB-S Rev B4 has
+U65 (AT24C01B/C, 128 bytes) on PB5/SCL and PB6/SDA. A0 is strapped high and
+A1/A2 low, so the seven-bit address is 0x51. The input muxes are SIUL2_1 IMCR
+207/208, while the pad output muxes are on SIUL2_0. Both pads use open-drain
+outputs and the board's external pull-ups. I2C4 and the PMIC are not accessed.
+
+``src/eeprom_read_test.c`` is a sample-local bring-up helper, not a general
+Zephyr I2C driver. It requires the existing 400 MHz M7 clock. The controller
+uses XBAR_DIV3_CLK and IBFD 0xa9 (divider 1536), giving a calculated bus rate
+of approximately 86.8 kHz within Standard-mode. This rate has not been measured
+with an oscilloscope. The test refuses to take over an already enabled I2C2
+controller and bounds each status poll to 20 ms.
+
+Each random read sends only the EEPROM word address, then a repeated START
+and the read address. No EEPROM data bytes are transmitted for programming.
+The final received byte is NACKed and followed by STOP. The test compares 100
+full 128-byte reads with an initial baseline, then verifies single-byte reads
+at offsets 0, 1, 7, 8, 63, and 127. Successful runs complete 107 transactions
+and read 12934 bytes, with the bus idle after each transaction. The controller
+is disabled afterward; the sample leaves the pinmux configured.
+
+UART prints the baseline and an ``I2C2 U65 PASS`` or ``FAIL`` line. TRACE32 can
+inspect ``sample_eeprom_result``: state 2 means pass, state 3 means fail. The
+structure also records counts, the last status, and an FNV-1a checksum. A test
+failure is reported but does not prevent the existing application threads
+from starting. Reuse ``S32G_CM7_0_ZEPHYR_Load.cmm`` with the same first-project
+ELF to repeat the boot test; no second application is needed.
+
+The hardware read test passed on the connected board with checksum 0x77f9fbc7:
+bytes 0 through 3 were 0x0a, 0x05, 0x0c, 0x0d; bytes 4 through 127 were 0xff.
+These are observed contents, not an assumed factory image or an expected value
+hard-coded into the test. This verifies address ACK, repeated START, sequential
+read, final NACK/STOP, and repeatability. It does not verify write cycles,
+write protection, retention, every memory cell, or Fast-mode. Other peripheral
+functions were not regression-tested during this I2C bring-up.
+
+Optional EEPROM Write Test
+--------------------------
+
+Normal boot leaves ``sample_eeprom_write_arm`` zero and performs no EEPROM
+programming. A debugger may arm a one-shot read/write test by setting this RAM
+variable to 0x45575254 at entry to ``sample_eeprom_write_test()``. The arm is
+consumed before testing. Save the entire read-test baseline to the host before
+arming; do not reset or remove power until restoration completes. A power loss
+or unrecoverable bus fault during testing can leave the last page modified.
+
+The write helper permits only offsets 0x78 through 0x7f, with at most eight
+bytes per transaction and no page wrap. It never writes bytes 0 through 119.
+The test backs up the complete array, checks that it still matches the host
+baseline, and tests full-page patterns 0x00, 0xff, 0xaa, 0x55 and an
+address-dependent pattern. It also tests single-byte writes at 0x78 and 0x7f.
+Each STOP is followed by a 6 ms delay before readback, exceeding the
+AT24C01B/C maximum 5 ms internal write cycle.
+
+After success or a possibly partial failed write, the test restores the
+original final page and reads the entire array for byte-for-byte comparison.
+Restoration has at most three attempts. A successful test uses eight write
+cycles and transmits 50 programming bytes, including restoration. These writes
+consume EEPROM endurance; this is not a periodic task. Any test failure keeps
+the existing application tasks stopped so that recovery can be investigated.
+The RAM baseline and host backup remain available if restoration fails.
+
+``verify_eeprom.py`` connects only to the local TRACE32 API and COM3. It uses the
+existing warm-load CMM and first-project ELF, breaks at the write-test entry,
+checks the read-only prerequisite and saves a new recovery JSON before arming.
+Existing backup files are never overwritten. The verifier checks UART results,
+debugger counters, and all restored bytes against its host backup. Supply the
+installed 64-bit API DLL path and keep TRACE32's UDP remote API enabled:
+
+.. code-block:: shell
+
+   python samples/boards/nxp/s32g_vnp_evb/periodic_tasks/verify_eeprom.py \
+     --api-dll E:/ruanjian/trace32/T32/demo/api/capi/dll/t32api64.dll \
+     --write --backup build/s32g_vnp_evb_periodic_tasks/u65_before_write.json
+
+Repeat without ``--write`` to prove that normal boot skips programming, and
+optionally compare a fresh EEPROM read with the previous recovery image:
+
+.. code-block:: shell
+
+   python samples/boards/nxp/s32g_vnp_evb/periodic_tasks/verify_eeprom.py \
+     --api-dll E:/ruanjian/trace32/T32/demo/api/capi/dll/t32api64.dll \
+     --compare-backup build/s32g_vnp_evb_periodic_tasks/u65_before_write.json
+
+The connected upper-board U65 passed five page-pattern checks and two
+single-byte checks. All 128 original bytes were restored with checksum
+0x77f9fbc7, and NACK, timeout and arbitration-loss counters remained zero.
+The same ELF passed a subsequent unarmed boot and fresh whole-array comparison
+with the host backup. Retention across power loss, hardware write protection,
+Fast-mode, fault-injected recovery and other-peripheral regression were not
+tested. This helper is not a general Zephyr I2C or EEPROM driver.
+
 Host Logic Tests
 ================
 
@@ -238,5 +334,6 @@ From the repository root, using a host C compiler:
    ./build/test_s32g_periodic_logic
 
 These tests cover integer/fractional PLLs, PLL/DFS lock and divider checks, LED
-500 ms boundaries, missed periods, and large expiration counts. They do not
+500 ms boundaries, missed periods, large expiration counts and the EEPROM
+write-range guard, including page-end and oversized lengths. They do not
 exercise Zephyr scheduling, concurrent event delivery, MMIO, or UART/GPIO drivers.

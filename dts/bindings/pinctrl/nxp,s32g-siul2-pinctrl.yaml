@@ -17,6 +17,7 @@ child-binding:
           - bias-pull-up
           - input-enable
           - output-enable
+          - drive-open-drain
 
     properties:
       pinmux:

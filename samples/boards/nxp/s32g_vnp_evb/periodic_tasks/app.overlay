@@ -6,12 +6,30 @@
 #include <zephyr/dt-bindings/pinctrl/nxp-siul2-pinctrl.h>
 
 / {
+	zephyr,user {
+		pinctrl-0 = <&eeprom_i2c2_default>;
+		pinctrl-names = "default";
+	};
+
 	aliases {
 		ethernet0 = &gmac0;
 	};
 };
 
 &siul2_0 {
+	eeprom_i2c2_default: eeprom-i2c2-default {
+		bus {
+			/* PB5/SCL and PB6/SDA use SIUL2_1 IMCR 207/208. */
+			pinmux = <NXP_SIUL2_PINMUX(0, 1, 21, 1, 207, 2)>,
+				 <NXP_SIUL2_PINMUX(0, 1, 22, 1, 208, 2)>;
+			input-enable;
+			output-enable;
+			drive-open-drain;
+			bias-disable;
+			nxp,slew-rate = <4>;
+		};
+	};
+
 	gmac0_default: gmac0-default {
 		tx {
 			pinmux = <NXP_SIUL2_PINMUX(0, 0, 66, 1, 0, 0)>,

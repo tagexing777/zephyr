@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "../../src/clock.h"
+#include "../../src/eeprom_read_test.h"
 #include "../../src/periodic_logic.h"
 
 static void test_clock(void)
@@ -53,10 +54,25 @@ static void test_led(void)
 	assert(!sample_led_advance(&phase, 0U));
 }
 
+static void test_eeprom_write_range(void)
+{
+	assert(!sample_eeprom_write_range_valid(0U, 1U));
+	assert(!sample_eeprom_write_range_valid(119U, 1U));
+	assert(!sample_eeprom_write_range_valid(120U, 0U));
+	assert(sample_eeprom_write_range_valid(120U, 8U));
+	assert(sample_eeprom_write_range_valid(121U, 7U));
+	assert(sample_eeprom_write_range_valid(127U, 1U));
+	assert(!sample_eeprom_write_range_valid(127U, 2U));
+	assert(!sample_eeprom_write_range_valid(128U, 1U));
+	assert(!sample_eeprom_write_range_valid(255U, 1U));
+	assert(!sample_eeprom_write_range_valid(120U, SIZE_MAX));
+}
+
 int main(void)
 {
 	test_clock();
 	test_led();
-	puts("Clock and LED phase tests passed");
+	test_eeprom_write_range();
+	puts("Clock, LED phase and EEPROM write-boundary tests passed");
 	return 0;
 }
