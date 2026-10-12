@@ -9,6 +9,7 @@
 #include <zephyr/sys/atomic.h>
 #include <zephyr/sys/printk.h>
 
+#include "can_loopback.h"
 #include "clock.h"
 #include "eeprom_read_test.h"
 #include "network.h"
@@ -206,6 +207,10 @@ int main(void)
 	if (sample_core_clock_hz == 0U) {
 		printk("Unsupported M7 clock tree, MUX0 source=%" PRIu32 "\n", sample_clock_source);
 		return -ENOTSUP;
+	}
+	err = sample_can_loopback_test();
+	if (err != 0) {
+		printk("CAN0 loopback failed: %d\n", err);
 	}
 	/* Check reads before an optional, debugger-armed write/restore test. */
 	sample_eeprom_read_test();

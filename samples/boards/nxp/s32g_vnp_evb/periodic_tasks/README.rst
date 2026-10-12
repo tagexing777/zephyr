@@ -320,6 +320,56 @@ with the host backup. Retention across power loss, hardware write protection,
 Fast-mode, fault-injected recovery and other-peripheral regression were not
 tested. This helper is not a general Zephyr I2C or EEPROM driver.
 
+FlexCAN0 Internal Loopback
+=========================
+
+``CONFIG_SAMPLE_S32G_FLEXCAN_LOOPBACK=y`` enables a bounded startup test in this
+same application ELF, before the periodic threads start. It uses native
+FlexCAN0 at 0x401b4000, not an LLCE CAN controller. The shared FLEXCAN clock must
+already select the stable 40 MHz FXOSC; the test does not switch clocks or
+configure CAN pins, connectors, or transceivers. Exclusive CAN0 ownership is
+required. Enabled other M7/A53 cores, interrupt masks, pending frames, and
+non-idle mailbox states are rejected. These checks cannot establish ownership
+against firmware that starts concurrently.
+
+The test enables internal loopback and self reception, with classical CAN at
+500 kbit/s, 20 time quanta per bit, an 80% sample point, and SJW of two quanta.
+CBT is cleared before CTRL1 timing is written because their timing fields alias.
+All message and individual-mask RAM is initialized for ECC. RX mailbox 1 and
+TX mailbox 8 exchange 1000 frames: 500 standard and 500 extended identifiers,
+including identifier boundaries, with DLC values 0 through 8. Each frame's
+identifier, format, length, and valid payload bytes are compared; padding beyond
+DLC is ignored. The total payload is 3996 bytes per run. Each register wait is
+bounded to 20 ms.
+
+The helper records frame counts, DLC coverage, mismatches, timeouts, error
+status/counters, memory errors, timing readback, and cleanup results in
+``sample_can_result``. Errors observed after the last frame or during shutdown
+also prevent PASS. The module is frozen and disabled at completion, retaining
+the loopback bit. Set the option to ``n`` to skip this startup test. This is a
+sample-local polled hardware probe, not a Zephyr CAN API driver.
+
+With TRACE32's local remote API enabled and COM3 available, use the original
+``S32G_CM7_0_ZEPHYR_Load.cmm`` and first-project ELF:
+
+.. code-block:: shell
+
+   python samples/boards/nxp/s32g_vnp_evb/periodic_tasks/verify_can.py \
+     --api-dll E:/ruanjian/trace32/T32/demo/api/capi/dll/t32api64.dll \
+     --cold --runs 3
+
+``--cold`` selects the existing cold connection/SRAM initialization path for
+the first run; subsequent runs use its WARM path. Omit ``--cold`` when M7_0 is
+already connected. The verifier compares UART output with debugger results and
+requires the target to remain running and CAN0 to be disabled after each run.
+It never arms EEPROM programming and does not perform other-peripheral regression.
+
+After board power-on, one cold debugger load and two warm reloads passed all
+3000 frames. Mismatches, timeouts, ESR/ECR errors, memory errors, and cleanup
+errors remained zero. This verifies internal classical CAN loopback only:
+external pins/transceivers/bus traffic, CAN FD, interrupt operation, filtering
+rejection, error injection, and independent Flash boot were not tested.
+
 Host Logic Tests
 ================
 

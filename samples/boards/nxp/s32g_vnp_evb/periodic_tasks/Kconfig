@@ -5,6 +5,15 @@ mainmenu "S32G periodic application"
 
 source "Kconfig.zephyr"
 
+config SAMPLE_S32G_FLEXCAN_LOOPBACK
+	bool "Run FlexCAN0 internal loopback at startup"
+	depends on SOC_S32G274A_M7_0
+	help
+	  Test 1000 classical CAN frames at 500 kbit/s, then disable CAN0.
+	  Requires exclusive ownership of CAN0 and an existing stable 40 MHz
+	  FXOSC-selected FLEXCAN clock. Does not configure pins or transceivers,
+	  change shared clocks, or provide a Zephyr CAN API driver.
+
 config SAMPLE_S32G_CORE_PLL_FXOSC
 	bool "Initialize CORE_PLL from the board crystal"
 	depends on SOC_S32G274A_M7_0

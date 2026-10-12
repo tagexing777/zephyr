@@ -93,8 +93,9 @@ class Debugger:
     def read_bytes(self, address, length):
         return bytes(self.evaluate(f"Data.Byte(D:0x{address + i:x})") for i in range(length))
 
-    def load(self, loader, elf):
-        self.command(f'DO "{loader.as_posix()}" "{elf.as_posix()}" "WARM"')
+    def load(self, loader, elf, warm=True):
+        mode = ' "WARM"' if warm else ''
+        self.command(f'DO "{loader.as_posix()}" "{elf.as_posix()}"{mode}')
         time.sleep(0.25)
         deadline = time.monotonic() + 20
         state = ctypes.c_int()
