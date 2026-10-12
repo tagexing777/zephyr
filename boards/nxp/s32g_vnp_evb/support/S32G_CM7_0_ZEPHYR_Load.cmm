@@ -7,6 +7,7 @@
 ; Optional first argument: absolute path to an M7_0 SRAM ELF with a main symbol.
 ; Optional second argument: WARM, using an already-connected M7_0 debugger.
 ; WARM stops the exclusively owned GMAC0 and reloads only the M7_0 image.
+; Never use the cold path while another core is running.
 
 LOCAL &zephyr_elf &connect_script &watchdog_script &load_mode
 LOCAL &vector_base &initial_sp &reset_vector &reset_pc
@@ -40,6 +41,16 @@ IF SYStem.CONFIG.Slave()
 (
     PRINT %ERROR "Run this script in the master TRACE32 debugger."
     ENDDO
+)
+
+; Refuse both reload modes when a connected session can see active secondary cores.
+IF SYStem.Up()
+(
+    IF ((Data.Long(EAXI:0x40088168)&1)!=0)||((Data.Long(EAXI:0x40088188)&1)!=0)
+    (
+        PRINT %ERROR "M7_1/M7_2 clocks are active; stop all cores before reloading M7_0."
+        ENDDO
+    )
 )
 
 IF (("&load_mode"!="")&&("&load_mode"!="WARM"))
@@ -112,17 +123,18 @@ Register.Set BASEPRI 0
 Register.Set FAULTMASK 0
 Register.Set XPSR 0x01000000
 
-Data.LOAD.Elf "&zephyr_elf"
+; A range limits writes even if an old image still declares the full 2 MiB region.
+Data.LOAD.Elf "&zephyr_elf" D:0x34000000++0xFFFFF
 &initial_sp=Data.Long(D:&vector_base)
 &reset_vector=Data.Long(D:&vector_base+0x4)
 &reset_pc=(&reset_vector&0xFFFFFFFE)
 
-IF ((&initial_sp<=0x34000000)||(&initial_sp>0x34200000)||((&initial_sp&0x7)!=0))
+IF ((&initial_sp<=0x34000000)||(&initial_sp>0x34100000)||((&initial_sp&0x7)!=0))
 (
-    PRINT %ERROR "Invalid initial stack pointer for the M7_0 2 MiB SRAM region."
+    PRINT %ERROR "Invalid initial stack pointer for the M7_0 1 MiB AMP SRAM region."
     ENDDO
 )
-IF (((&reset_vector&0x1)==0)||(&reset_pc<0x34000000)||(&reset_pc>=0x34200000))
+IF (((&reset_vector&0x1)==0)||(&reset_pc<0x34000000)||(&reset_pc>=0x34100000))
 (
     PRINT %ERROR "Invalid Thumb reset vector for the M7_0 SRAM image."
     ENDDO

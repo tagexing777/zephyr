@@ -1,0 +1,166 @@
+; Copyright The Zephyr Project Contributors
+; SPDX-License-Identifier: Apache-2.0
+
+; Start the two independent secondary images from the running M7_0 master.
+; Run verify_images.py before downloading any ELF. No reset or SRAM initialization.
+; Does not change debugger core assignment, M7_0 registers, or shared clocks.
+; Arguments: M7_1 ELF, M7_2 ELF, LED mode, verified sample_amp_led_config address.
+; LED mode: D14_J164_1_2 (physical jumper confirmation) or NO_LED.
+
+LOCAL &m7_1_elf &m7_2_elf &led_mode &led_config_address &expected_led_config
+LOCAL &sp1 &sp2 &pc1 &pc2 &reset_state
+PARAMETERS &m7_1_elf &m7_2_elf &led_mode &led_config_address
+
+IF "&m7_1_elf"==""
+(
+    &m7_1_elf="~~~~/../../../../build/s32g_vnp_evb_m7_1/zephyr/zephyr.elf"
+)
+IF "&m7_2_elf"==""
+(
+    &m7_2_elf="~~~~/../../../../build/s32g_vnp_evb_m7_2/zephyr/zephyr.elf"
+)
+IF ("&led_mode"!="D14_J164_1_2")&&("&led_mode"!="NO_LED")
+(
+    PRINT %ERROR "Confirm J164 pins 1-2 for D14; pins 2-3 select the RCON boot signal."
+    PRINT %ERROR "Use D14_J164_1_2 after checking the jumper, or NO_LED with a no-LED image."
+    ENDDO
+)
+IF "&led_config_address"==""
+(
+    PRINT %ERROR "Fourth argument must be the verified M7_1 sample_amp_led_config address."
+    ENDDO
+)
+; PARAMETERS exposes a quoted numeric argument directly to expression evaluation.
+IF (&led_config_address<0x34100000)||(&led_config_address>0x3417FFFC)||((&led_config_address&3)!=0)
+(
+    PRINT %ERROR "LED configuration address must be aligned and inside the M7_1 SRAM region."
+    ENDDO
+)
+&expected_led_config=0x4C454431
+IF "&led_mode"=="NO_LED"
+(
+    &expected_led_config=0x4E4C4544
+)
+IF !OS.FILE.EXIST("&m7_1_elf")||!OS.FILE.EXIST("&m7_2_elf")
+(
+    PRINT %ERROR "Both secondary ELF files must exist."
+    ENDDO
+)
+IF SYStem.CONFIG.Slave()||(!CPUIS("S32G274A-M7-0")&&!CPUIS("S32G274A-M7"))
+(
+    PRINT %ERROR "Use the existing M7_0 master debugger."
+    ENDDO
+)
+IF !STATE.RUN()
+(
+    PRINT %ERROR "Run M7_0 first and wait for its shared initialization to finish."
+    ENDDO
+)
+IF !sYmbol.EXIST(sample_amp_primary_ready)
+(
+    PRINT %ERROR "Reload the AMP-capable primary image before starting secondary cores."
+    ENDDO
+)
+IF (Data.Long(EAXI:sample_amp_primary_ready)!=0x414D5030)
+(
+    PRINT %ERROR "M7_0 boot-time initialization has not completed."
+    ENDDO
+)
+IF (Data.Long(EAXI:sample_core_clock_hz)!=400000000.)
+(
+    PRINT %ERROR "The shared M7 clock must already be 400 MHz."
+    ENDDO
+)
+IF ((Data.Long(EAXI:0x40088168)&1)!=0)||((Data.Long(EAXI:0x40088188)&1)!=0)
+(
+    PRINT %ERROR "A secondary core is already enabled; no image was overwritten."
+    ENDDO
+)
+IF (Data.Long(EAXI:0x40088108)&1)==0
+(
+    PRINT %ERROR "Partition 0 must already be enabled by the boot owner."
+    ENDDO
+)
+&reset_state=Data.Long(EAXI:0x40078140)
+IF ((&reset_state&6)!=6)
+(
+    PRINT %ERROR "Both secondary cores must be held in reset before loading."
+    ENDDO
+)
+
+; Clear stale vectors first; ranges prevent a mismatched ELF overwriting M7_0.
+; The options preserve the running primary PC and its debug symbols.
+Data.Set EAXI:0x34100000 %Long 0 0
+Data.Set EAXI:0x34180000 %Long 0 0
+; A file-backed flag must overwrite the sentinel to prove the mode matches this ELF.
+Data.Set EAXI:&led_config_address %Long 0xFFFFFFFF
+Data.LOAD.Elf "&m7_1_elf" EAXI:0x34100000++0x7FFFF /NoSYmbol /NoRegister /NoClear
+Data.LOAD.Elf "&m7_2_elf" EAXI:0x34180000++0x7FFFF /NoSYmbol /NoRegister /NoClear
+IF Data.Long(EAXI:&led_config_address)!=&expected_led_config
+(
+    PRINT %ERROR "M7_1 ELF does not match the selected LED mode; secondary cores remain in reset."
+    ENDDO
+)
+&sp1=Data.Long(EAXI:0x34100000)
+&pc1=Data.Long(EAXI:0x34100004)
+&sp2=Data.Long(EAXI:0x34180000)
+&pc2=Data.Long(EAXI:0x34180004)
+IF (&sp1<=0x34100000)||(&sp1>0x34180000)||((&sp1&7)!=0)
+(
+    PRINT %ERROR "Invalid M7_1 stack pointer; secondary cores remain in reset."
+    ENDDO
+)
+IF (&sp2<=0x34180000)||(&sp2>0x34200000)||((&sp2&7)!=0)
+(
+    PRINT %ERROR "Invalid M7_2 stack pointer; secondary cores remain in reset."
+    ENDDO
+)
+IF ((&pc1&1)==0)||((&pc1&0xFFFFFFFE)<0x34100000)||(&pc1>=0x34180000)
+(
+    PRINT %ERROR "Invalid M7_1 reset vector; secondary cores remain in reset."
+    ENDDO
+)
+IF ((&pc2&1)==0)||((&pc2&0xFFFFFFFE)<0x34180000)||(&pc2>=0x34200000)
+(
+    PRINT %ERROR "Invalid M7_2 reset vector; secondary cores remain in reset."
+    ENDDO
+)
+
+; Enable only each secondary core clock. Leave partition/IP clock ownership unchanged.
+Data.Set EAXI:0x4008816C %Long 0x34100000
+Data.Set EAXI:0x4008818C %Long 0x34180000
+Data.Set EAXI:0x40088160 %Long (Data.Long(EAXI:0x40088160)|1)
+Data.Set EAXI:0x40088164 %Long 1
+Data.Set EAXI:0x40088180 %Long (Data.Long(EAXI:0x40088180)|1)
+Data.Set EAXI:0x40088184 %Long 1
+Data.Set EAXI:0x40088000 %Long 0x5AF0
+Data.Set EAXI:0x40088000 %Long 0xA50F
+WAIT ((Data.Long(EAXI:0x40088164)|Data.Long(EAXI:0x40088184))&1)==0 100ms
+IF ((Data.Long(EAXI:0x40088164)|Data.Long(EAXI:0x40088184))&1)!=0
+(
+    PRINT %ERROR "Secondary core update timed out; reset was not released."
+    ENDDO
+)
+IF ((Data.Long(EAXI:0x40088168)&1)==0)||((Data.Long(EAXI:0x40088188)&1)==0)
+(
+    PRINT %ERROR "Secondary core clock enable timed out; reset was not released."
+    ENDDO
+)
+
+; Release only M7_1 and M7_2. Do not alter M7_0 or any peripheral reset bit.
+Data.Set EAXI:0x40078040 %Long (Data.Long(EAXI:0x40078040)&0xFFFFFFF9)
+WAIT (Data.Long(EAXI:0x40078140)&6)==0 100ms
+IF (Data.Long(EAXI:0x40078140)&6)!=0
+(
+    PRINT %ERROR "Secondary reset release timed out; inspect MC_RGM status."
+    ENDDO
+)
+IF "&led_mode"=="NO_LED"
+(
+    PRINT "Secondary cores released without LED ownership. Verify both task counter sets."
+)
+ELSE
+(
+    PRINT "Secondary cores released. Verify both task counter sets and the D14 LED."
+)
+ENDDO

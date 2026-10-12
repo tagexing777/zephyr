@@ -7,6 +7,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/atomic.h>
+#include <zephyr/sys/barrier.h>
 #include <zephyr/sys/printk.h>
 
 #include "can_loopback.h"
@@ -37,6 +38,9 @@ struct sample_counters {
 };
 
 struct sample_counters sample_counters;
+
+/* Published after shared clock setup and boot-time peripheral tests finish. */
+volatile uint32_t sample_amp_primary_ready;
 
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 static K_EVENT_DEFINE(extended_events);
@@ -258,5 +262,7 @@ int main(void)
 		printk("Network thread startup failed: %d\n", err);
 		return err;
 	}
+	barrier_dsync_fence_full();
+	sample_amp_primary_ready = 0x414d5030U;
 	return 0;
 }

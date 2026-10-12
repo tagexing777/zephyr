@@ -4,11 +4,14 @@
 if SOC_SERIES_S32G2
 
 config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default $(dt_node_int_prop_int,/cpus/cpu@1,clock-frequency) if SOC_S32G274A_M7_1
+	default $(dt_node_int_prop_int,/cpus/cpu@2,clock-frequency) if SOC_S32G274A_M7_2
 	default $(dt_node_int_prop_int,/cpus/cpu@0,clock-frequency)
+
+config NUM_IRQS
+	default 242
 
 configdefault FPU
 	default y
-
-rsource "Kconfig.defconfig.*"
 
 endif # SOC_SERIES_S32G2

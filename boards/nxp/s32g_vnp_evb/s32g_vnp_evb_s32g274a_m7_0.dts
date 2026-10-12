@@ -14,6 +14,12 @@
 	model = "NXP S32G-VNP-EVB S32G274A Cortex-M7_0";
 	compatible = "nxp,s32g-vnp-evb";
 
+	/* Each AMP image links into a disjoint slice of the first SRAM bank. */
+	m7_0_sram: memory@34000000 {
+		compatible = "mmio-sram";
+		reg = <0x34000000 DT_SIZE_M(1)>;
+	};
+
 	aliases {
 		led0 = &user_led;
 	};
@@ -31,8 +37,12 @@
 	chosen {
 		zephyr,console = &uart0;
 		zephyr,shell-uart = &uart0;
-		zephyr,sram = &sram0;
+		zephyr,sram = &m7_0_sram;
 	};
+};
+
+&cpu_m7_0 {
+	status = "okay";
 };
 
 &gpiob {

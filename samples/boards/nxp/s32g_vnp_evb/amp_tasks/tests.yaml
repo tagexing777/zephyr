@@ -1,0 +1,26 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+sample:
+  name: S32G secondary M7 AMP periodic tasks
+tests:
+  sample.boards.nxp.s32g.amp_tasks:
+    platform_allow:
+      - s32g_vnp_evb/s32g274a/m7_1
+      - s32g_vnp_evb/s32g274a/m7_2
+    integration_platforms:
+      - s32g_vnp_evb/s32g274a/m7_1
+      - s32g_vnp_evb/s32g274a/m7_2
+    tags:
+      - kernel
+    build_only: true
+
+  sample.boards.nxp.s32g.amp_tasks.no_led:
+    platform_allow:
+      - s32g_vnp_evb/s32g274a/m7_1
+    integration_platforms:
+      - s32g_vnp_evb/s32g274a/m7_1
+    extra_args: EXTRA_CONF_FILE=no_led.conf
+    tags:
+      - kernel
+    build_only: true

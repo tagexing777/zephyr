@@ -13,25 +13,28 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		cpu@0 {
+		cpu_m7_0: cpu@0 {
 			device_type = "cpu";
 			compatible = "arm,cortex-m7";
 			reg = <0>;
 			clock-frequency = <DT_FREQ_M(48)>;
+			status = "disabled";
 		};
 
-		cpu@1 {
+		cpu_m7_1: cpu@1 {
 			device_type = "cpu";
 			compatible = "arm,cortex-m7";
 			reg = <1>;
 			clock-frequency = <DT_FREQ_M(48)>;
+			status = "disabled";
 		};
 
-		cpu@2 {
+		cpu_m7_2: cpu@2 {
 			device_type = "cpu";
 			compatible = "arm,cortex-m7";
 			reg = <2>;
 			clock-frequency = <DT_FREQ_M(48)>;
+			status = "disabled";
 		};
 	};
 

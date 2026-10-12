@@ -16,6 +16,14 @@ config SOC_S32G274A_M7_0
 	bool
 	select SOC_S32G274A
 
+config SOC_S32G274A_M7_1
+	bool
+	select SOC_S32G274A
+
+config SOC_S32G274A_M7_2
+	bool
+	select SOC_S32G274A
+
 config SOC
 	default "s32g274a" if SOC_S32G274A
 

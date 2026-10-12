@@ -1,0 +1,56 @@
+/*
+ * Copyright The Zephyr Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <arm/nxp/s32/nxp_s32g274a_m7.dtsi>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "NXP S32G-VNP-EVB S32G274A Cortex-M7_1";
+	compatible = "nxp,s32g-vnp-evb";
+
+	m7_1_sram: memory@34100000 {
+		compatible = "mmio-sram";
+		reg = <0x34100000 DT_SIZE_K(512)>;
+	};
+
+	aliases {
+		led0 = &user_led;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		user_led: led-0 {
+			/* Processor board D14: GPIO45/PC13, cathode driven by GPIO. */
+			gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
+			label = "D14";
+		};
+	};
+
+	chosen {
+		zephyr,sram = &m7_1_sram;
+	};
+};
+
+&cpu_m7_1 {
+	status = "okay";
+};
+
+&gpioc {
+	/* M7_1 owns only D14; other PORT_C pins remain unavailable to this image. */
+	gpio-reserved-ranges = <0 13>, <14 2>;
+	status = "okay";
+};
+
+&siul2_0 {
+	status = "disabled";
+};
+
+&siul2_1 {
+	status = "disabled";
+};

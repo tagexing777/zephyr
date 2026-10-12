@@ -5,7 +5,7 @@ identifier: s32g_vnp_evb/s32g274a/m7_0
 name: NXP S32G-VNP-EVB M7_0
 type: mcu
 arch: arm
-ram: 2048
+ram: 1024
 flash: 0
 toolchain:
   - zephyr

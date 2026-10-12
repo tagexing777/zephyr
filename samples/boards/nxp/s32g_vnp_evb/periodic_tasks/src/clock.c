@@ -63,7 +63,7 @@ static int sample_clock_init(void)
 		xbar_2x_hz = sample_dfs_hz(core_pll_hz(), div, status, port);
 	}
 
-	/* CORE_M7_0 runs at XBAR_CLK, which is XBAR_2X_CLK / 2. */
+	/* All three M7 cores run at XBAR_CLK, which is XBAR_2X_CLK / 2. */
 	xbar_2x_hz /= 2U;
 	if ((xbar_2x_hz < 1000U) || (xbar_2x_hz > 400000000U)) {
 		/* Keep the bootstrap rate so main() can report the unsupported tree. */

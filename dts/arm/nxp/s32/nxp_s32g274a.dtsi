@@ -44,6 +44,16 @@
 			status = "disabled";
 		};
 
+		gpioc: gpio@4009d706 {
+			compatible = "nxp,siul2-gpio";
+			reg = <0x4009d706 0x2>, <0x4009c2c0 0x40>;
+			reg-names = "pgpdo", "mscr";
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+			status = "disabled";
+		};
+
 		siul2_1: pinctrl@44010000 {
 			compatible = "nxp,s32g-siul2-pinctrl";
 			reg = <0x44010000 0x10000>;

@@ -1,0 +1,35 @@
+/*
+ * Copyright The Zephyr Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <arm/nxp/s32/nxp_s32g274a_m7.dtsi>
+
+/ {
+	model = "NXP S32G-VNP-EVB S32G274A Cortex-M7_2";
+	compatible = "nxp,s32g-vnp-evb";
+
+	m7_2_sram: memory@34180000 {
+		compatible = "mmio-sram";
+		reg = <0x34180000 DT_SIZE_K(512)>;
+	};
+
+	chosen {
+		zephyr,sram = &m7_2_sram;
+	};
+};
+
+&cpu_m7_2 {
+	status = "okay";
+};
+
+&siul2_0 {
+	status = "disabled";
+};
+
+&siul2_1 {
+	status = "disabled";
+};

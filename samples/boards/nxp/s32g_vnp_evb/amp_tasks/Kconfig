@@ -1,0 +1,25 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "S32G secondary M7 AMP application"
+
+config GPIO
+	default y if SAMPLE_S32G_AMP_LED
+
+source "Kconfig.zephyr"
+
+config SAMPLE_S32G_AMP_LED
+	bool "Upper-board D14 LED"
+	depends on SOC_S32G274A_M7_1
+	default y
+	help
+	  Drive PC13 from the 1 ms task to toggle D14 every 500 ms.
+	  Enable only after confirming that upper-board J164 is fitted 1-2.
+	  Disable to test the secondary tasks without accessing any GPIO.
+
+config SAMPLE_S32G_CORE_PLL_FXOSC
+	bool
+	depends on SOC_S32G274A_M7_0
+	help
+	  Shared clock initialization is unavailable to secondary M7 images.
+	  M7_0 establishes the clock tree before starting M7_1 and M7_2.

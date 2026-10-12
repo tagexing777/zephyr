@@ -41,5 +41,8 @@ static void s32g_swt0_disable(void)
 
 void soc_early_init_hook(void)
 {
-	s32g_swt0_disable();
+	/* Only the primary image owns the shared SWT0 configuration. */
+	if (IS_ENABLED(CONFIG_SOC_S32G274A_M7_0)) {
+		s32g_swt0_disable();
+	}
 }
