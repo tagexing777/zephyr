@@ -73,6 +73,10 @@ trip. Fix the cause, never work around a check.
 
 ## Commits
 
+- Commit titles and bodies for this development fork use Chinese descriptions.
+  Keep the established area/subarea prefixes and required trailers unchanged.
+  Upstream submissions still follow upstream language requirements.
+
     area: subarea: imperative summary (75 columns max, no trailing period)
 
     Body wrapped at 75 columns: what the change does, why this approach,
